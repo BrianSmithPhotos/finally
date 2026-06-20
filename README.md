@@ -57,6 +57,18 @@ finally/
 └── scripts/     # Start/stop helpers
 ```
 
+## Documentation
+
+| Doc | Description |
+|---|---|
+| [`planning/PLAN.md`](planning/PLAN.md) | Full project specification — vision, architecture, API, schema, testing strategy |
+| [`planning/MARKET_DATA_DESIGN.md`](planning/MARKET_DATA_DESIGN.md) | Detailed design of the market data backend (cache, simulator, Massive API client, SSE stream) |
+| [`planning/MARKET_DATA_SUMMARY.md`](planning/MARKET_DATA_SUMMARY.md) | Summary of the completed, tested market data subsystem |
+| [`planning/archive/`](planning/archive) | Superseded drafts of the market data design (interface, simulator, Massive API, review notes) |
+| [`backend/README.md`](backend/README.md) | Backend project overview (FastAPI/uv) |
+| [`backend/CLAUDE.md`](backend/CLAUDE.md) | Agent instructions scoped to the backend |
+| [`CLAUDE.md`](CLAUDE.md) | Top-level agent instructions for the project |
+
 ## License
 
 See [LICENSE](LICENSE).
