@@ -129,3 +129,31 @@ class TestGBMSimulator:
         if '.' in price_str:
             decimal_part = price_str.split('.')[1]
             assert len(decimal_part) <= 2
+
+    def test_tickers_normalized_on_construction(self):
+        """Lowercase/whitespace tickers passed at construction should be
+        normalized the same way MassiveDataSource normalizes them."""
+        sim = GBMSimulator(tickers=["aapl", " GOOGL "])
+        assert set(sim.get_tickers()) == {"AAPL", "GOOGL"}
+        assert sim.get_price("aapl") == sim.get_price("AAPL")
+
+    def test_add_ticker_normalizes_case(self):
+        sim = GBMSimulator(tickers=["AAPL"])
+        sim.add_ticker("tsla")
+        assert "TSLA" in sim.get_tickers()
+        assert sim.get_price("TSLA") is not None
+
+    def test_add_ticker_lowercase_is_noop_if_already_present(self):
+        sim = GBMSimulator(tickers=["AAPL"])
+        sim.add_ticker("aapl")
+        assert sim.get_tickers() == ["AAPL"]
+
+    def test_remove_ticker_normalizes_case(self):
+        sim = GBMSimulator(tickers=["AAPL", "GOOGL"])
+        sim.remove_ticker("aapl")
+        assert "AAPL" not in sim.get_tickers()
+        assert "GOOGL" in sim.get_tickers()
+
+    def test_get_price_normalizes_case(self):
+        sim = GBMSimulator(tickers=["AAPL"])
+        assert sim.get_price("aapl") == sim.get_price("AAPL")

@@ -101,3 +101,30 @@ class TestPriceCache:
         cache = PriceCache()
         update = cache.update("AAPL", 190.12345)
         assert update.price == 190.12
+
+    def test_ticker_normalized_on_update(self):
+        """Lowercase/whitespace tickers should collapse to the same entry."""
+        cache = PriceCache()
+        cache.update("aapl", 190.00)
+        update = cache.update(" AAPL ", 191.00)
+        assert update.ticker == "AAPL"
+        assert len(cache) == 1
+        assert cache.get_price("aapl") == 191.00
+
+    def test_ticker_normalized_on_get(self):
+        cache = PriceCache()
+        cache.update("AAPL", 190.00)
+        assert cache.get("aapl") is not None
+        assert cache.get(" aapl ") is not None
+
+    def test_ticker_normalized_on_remove(self):
+        cache = PriceCache()
+        cache.update("AAPL", 190.00)
+        cache.remove("aapl")
+        assert cache.get("AAPL") is None
+
+    def test_ticker_normalized_on_contains(self):
+        cache = PriceCache()
+        cache.update("AAPL", 190.00)
+        assert "aapl" in cache
+        assert " AAPL " in cache

@@ -4,6 +4,8 @@
 
 **Verdict: Approved.** The implementation matches the design doc, the abstraction is clean, and the test suite is strong. Two minor inconsistencies and one real test gap are noted below — none block merging, but the gap should be closed before this code is relied on in production.
 
+> **Update:** Both action items from §5 have been resolved. `stream.py` now has 100% test coverage (`tests/market/test_stream.py`), and ticker normalization (`strip().upper()`) is now applied consistently at the `PriceCache` boundary and inside `GBMSimulator`, matching `MassiveDataSource`'s existing behavior. The full suite is 90/90 passing at 98% coverage. See the bottom of this document for the verification run.
+
 ---
 
 ## 1. Test Run
@@ -161,3 +163,39 @@ No injection surfaces: tickers are used only as dict keys and string values pass
 2. Decide where ticker normalization (`upper().strip()`) lives and apply it consistently — likely at the future watchlist API boundary — before wiring up `POST /api/watchlist`.
 
 Neither item blocks merging this code as-is; both should be tracked before the watchlist/portfolio routes are built on top of this subsystem.
+
+---
+
+## 6. Follow-up: Fixes Applied
+
+Both action items above have been addressed:
+
+1. **`stream.py` coverage** — added `backend/tests/market/test_stream.py` (8 tests): unit tests drive `_generate_events()` directly with a mocked `Request` (covering the retry directive, version-based change detection, empty-cache skip, disconnect handling, and a missing `request.client`), plus two tests that invoke the route's endpoint coroutine directly to verify response headers/media type. `stream.py` is now at 100% coverage.
+2. **Ticker normalization** — `PriceCache` now normalizes (`strip().upper()`) on every read/write (`update`, `get`, `remove`, `__contains__`), and `GBMSimulator`/`SimulatorDataSource` normalize on construction, `add_ticker`, `remove_ticker`, and `get_price`. This matches `MassiveDataSource`'s existing normalization, so the same ticker now behaves identically regardless of which data source is active — enforced at the cache boundary so it can't be bypassed by a future caller that forgets to normalize.
+
+**Verification run after fixes:**
+
+```
+uv run pytest tests/market -v --cov=app.market --cov-report=term-missing
+```
+
+```
+Name                           Stmts   Miss  Cover   Missing
+------------------------------------------------------------
+app/market/__init__.py             6      0   100%
+app/market/cache.py               46      0   100%
+app/market/factory.py             15      0   100%
+app/market/interface.py           13      0   100%
+app/market/massive_client.py      67      4    94%   85-87, 125
+app/market/models.py              26      0   100%
+app/market/seed_prices.py          8      0   100%
+app/market/simulator.py          144      3    98%   160, 279-280
+app/market/stream.py              36      0   100%
+------------------------------------------------------------
+TOTAL                            361      7    98%
+============================== 90 passed in 2.35s ===============================
+```
+
+`ruff check app/market tests/market` — all checks passed.
+
+The remaining uncovered lines (`massive_client.py` 85-87/125, `simulator.py` 160/279-280) are the same defensive/loop-internal branches discussed in §2.2–§2.4 above and were judged not worth the complexity of forcing in a unit test.

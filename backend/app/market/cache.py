@@ -20,12 +20,19 @@ class PriceCache:
         self._lock = Lock()
         self._version: int = 0  # Monotonically increasing; bumped on every update
 
+    @staticmethod
+    def _normalize(ticker: str) -> str:
+        """Normalize a ticker symbol so the same ticker always maps to the same key,
+        regardless of which data source (or caller) supplied it."""
+        return ticker.strip().upper()
+
     def update(self, ticker: str, price: float, timestamp: float | None = None) -> PriceUpdate:
         """Record a new price for a ticker. Returns the created PriceUpdate.
 
         Automatically computes direction and change from the previous price.
         If this is the first update for the ticker, previous_price == price (direction='flat').
         """
+        ticker = self._normalize(ticker)
         with self._lock:
             ts = timestamp or time.time()
             prev = self._prices.get(ticker)
@@ -43,6 +50,7 @@ class PriceCache:
 
     def get(self, ticker: str) -> PriceUpdate | None:
         """Get the latest price for a single ticker, or None if unknown."""
+        ticker = self._normalize(ticker)
         with self._lock:
             return self._prices.get(ticker)
 
@@ -58,6 +66,7 @@ class PriceCache:
 
     def remove(self, ticker: str) -> None:
         """Remove a ticker from the cache (e.g., when removed from watchlist)."""
+        ticker = self._normalize(ticker)
         with self._lock:
             self._prices.pop(ticker, None)
 
@@ -71,5 +80,6 @@ class PriceCache:
             return len(self._prices)
 
     def __contains__(self, ticker: str) -> bool:
+        ticker = self._normalize(ticker)
         with self._lock:
             return ticker in self._prices

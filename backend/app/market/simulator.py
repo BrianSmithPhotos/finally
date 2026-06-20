@@ -66,7 +66,7 @@ class GBMSimulator:
 
         # Initialize all starting tickers
         for ticker in tickers:
-            self._add_ticker_internal(ticker)
+            self._add_ticker_internal(self._normalize(ticker))
         self._rebuild_cholesky()
 
     # --- Public API ---
@@ -119,6 +119,7 @@ class GBMSimulator:
 
     def add_ticker(self, ticker: str) -> None:
         """Add a ticker to the simulation. Rebuilds the correlation matrix."""
+        ticker = self._normalize(ticker)
         if ticker in self._prices:
             return
         self._add_ticker_internal(ticker)
@@ -126,6 +127,7 @@ class GBMSimulator:
 
     def remove_ticker(self, ticker: str) -> None:
         """Remove a ticker from the simulation. Rebuilds the correlation matrix."""
+        ticker = self._normalize(ticker)
         if ticker not in self._prices:
             return
         self._tickers.remove(ticker)
@@ -135,7 +137,7 @@ class GBMSimulator:
 
     def get_price(self, ticker: str) -> float | None:
         """Current price for a ticker, or None if not tracked."""
-        return self._prices.get(ticker)
+        return self._prices.get(self._normalize(ticker))
 
     def get_tickers(self) -> list[str]:
         """Return the list of currently tracked tickers."""
@@ -143,8 +145,17 @@ class GBMSimulator:
 
     # --- Internals ---
 
+    @staticmethod
+    def _normalize(ticker: str) -> str:
+        """Normalize a ticker symbol (matches MassiveDataSource's normalization
+        so the same ticker behaves identically regardless of active data source)."""
+        return ticker.strip().upper()
+
     def _add_ticker_internal(self, ticker: str) -> None:
-        """Add a ticker without rebuilding Cholesky (for batch initialization)."""
+        """Add a ticker without rebuilding Cholesky (for batch initialization).
+
+        Assumes `ticker` is already normalized by the caller.
+        """
         if ticker in self._prices:
             return
         self._tickers.append(ticker)
