@@ -1,0 +1,15 @@
+**/node_modules
+**/.next
+frontend/out
+backend/.venv
+backend/__pycache__
+backend/**/__pycache__
+backend/static
+db/finally.db
+db/finally.db-journal
+db/finally.db-wal
+db/finally.db-shm
+.git
+.env
+planning
+test
