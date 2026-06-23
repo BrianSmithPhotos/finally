@@ -1,6 +1,5 @@
-"""Tests for /api/chat: mocks app.llm.chat.get_chat_response since that module
-is owned by the LLM Engineer and not implemented yet (a NotImplementedError
-placeholder lives at app/llm/chat.py pending their merge).
+"""Tests for /api/chat: mocks app.llm.chat.get_chat_response so these tests
+don't depend on the real LLM call.
 """
 
 from __future__ import annotations
@@ -9,7 +8,7 @@ from unittest.mock import AsyncMock, patch
 
 from app.db.positions import get_position
 from app.db.users import get_user_profile
-from app.llm.chat import ChatResponse, TradeAction, WatchlistChange
+from app.llm.schemas import ChatResponse, TradeAction, WatchlistChange
 
 
 class TestChat:
