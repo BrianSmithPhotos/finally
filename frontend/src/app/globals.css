@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --up-glow: rgba(38, 208, 124, 0.2);
+  --down-glow: rgba(240, 80, 110, 0.2);
+  /* Font family vars consumed by Tailwind's font-sans / font-mono.
+     Backed by the self-hosted @fontsource families imported in layout.tsx. */
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  @apply bg-term-bg text-term-text font-sans antialiased;
+  /* Subtle scanline-free phosphor vignette — deepens edges without pure black. */
+  background-image: radial-gradient(
+    ellipse at 50% -10%,
+    #131a24 0%,
+    #0d1117 55%,
+    #0a0e14 100%
+  );
+  background-attachment: fixed;
+}
+
+/* Tabular figures everywhere numeric — the instrument-panel feel. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+/* Price-flash classes toggled imperatively on tick (see Sparkline/Watchlist). */
+.flash-up {
+  animation: flash-up 500ms ease-out;
+}
+.flash-down {
+  animation: flash-down 500ms ease-out;
+}
+
+/* Eyebrow / section label treatment — wide-tracked uppercase mono. */
+.eyebrow {
+  @apply font-mono text-2xs uppercase tracking-[0.22em] text-term-faint;
+}
+
+/* Hairline panel chrome. */
+.panel {
+  @apply rounded-md border border-term-border bg-term-panel/70 backdrop-blur-[2px];
+}
+
+.panel-head {
+  @apply flex items-center justify-between border-b border-term-line px-3 py-2;
+}
+
+/* Thin terminal scrollbars. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #2a3340 transparent;
+}
+*::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+*::-webkit-scrollbar-thumb {
+  background: #2a3340;
+  border-radius: 4px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid #209dd7;
+  outline-offset: 1px;
+}

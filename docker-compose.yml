@@ -1,0 +1,22 @@
+# Optional convenience wrapper (PLAN.md §11).
+#   docker compose up --build      # build + run
+#   docker compose down            # stop (volume + data preserved)
+# The named volume `finally-data` holds the SQLite DB at /app/db.
+
+services:
+  finally:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: finally:latest
+    container_name: finally
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - finally-data:/app/db
+    restart: unless-stopped
+
+volumes:
+  finally-data:

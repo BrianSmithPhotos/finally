@@ -1,0 +1,50 @@
+# =============================================================================
+# FinAlly E2E test stack (PLAN.md §12).
+#
+# Spins up the production app container plus a Playwright runner that executes
+# this directory's specs against it. Keeps browser deps OUT of the prod image.
+#
+# Usage (from the repo root):
+#   docker compose -f test/docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from e2e
+#   docker compose -f test/docker-compose.test.yml down -v
+#
+# The app runs with LLM_MOCK=true (deterministic chat, no API key needed) and a
+# throwaway in-container DB (no volume mount) so every run starts clean-seeded.
+# =============================================================================
+
+services:
+  app:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: finally:latest
+    environment:
+      LLM_MOCK: "true"
+      MASSIVE_API_KEY: ""        # force the built-in simulator
+      OPENROUTER_API_KEY: ""     # unused under LLM_MOCK
+      FINALLY_DB_PATH: /app/db/finally.db
+    # No volume mount -> ephemeral, freshly-seeded DB each run.
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,sys; sys.exit(0) if urllib.request.urlopen('http://localhost:8000/api/health').status==200 else sys.exit(1)"]
+      interval: 3s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+  e2e:
+    image: mcr.microsoft.com/playwright:v1.48.0-jammy
+    depends_on:
+      app:
+        condition: service_healthy
+    environment:
+      BASE_URL: http://app:8000
+      CI: "true"
+    working_dir: /work
+    volumes:
+      - .:/work
+    # Install deps (the image already ships browsers for this Playwright version)
+    # then run the suite. Exit code propagates via --exit-code-from e2e.
+    command: >
+      sh -c "npm install --no-audit --no-fund && npx playwright test"

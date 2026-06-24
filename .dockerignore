@@ -1,0 +1,41 @@
+# Keep the Docker build context small and reproducible.
+# Anything that is generated, machine-specific, or secret stays out.
+
+# --- Git / project meta ---
+.git
+.gitignore
+.github
+.claude
+*.md
+!backend/README.md
+LICENSE
+
+# --- Env / secrets (never ship secrets into the image) ---
+.env
+.env.*
+!.env.example
+
+# --- Frontend: node deps + prior build output (rebuilt in stage 1) ---
+frontend/node_modules
+frontend/.next
+frontend/out
+frontend/.eslintcache
+
+# --- Backend: local venv + caches (rebuilt in stage 2 via uv sync) ---
+backend/.venv
+backend/.pytest_cache
+backend/.ruff_cache
+backend/**/__pycache__
+backend/**/*.pyc
+backend/tests
+
+# --- Runtime DB volume target (must stay empty in the image) ---
+db/*.db
+db/*.db-*
+
+# --- Misc OS / editor noise ---
+.DS_Store
+*.swp
+scratchpad
+test
+deploy
