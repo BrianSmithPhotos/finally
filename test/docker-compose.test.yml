@@ -1,0 +1,34 @@
+services:
+  finally:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    # No named/persistent volume here: each test run gets a fresh,
+    # throwaway SQLite file inside the container's writable layer so test
+    # runs never pollute real data and start from a clean seeded DB.
+    environment:
+      - DB_PATH=/app/db/finally-test.db
+      - OPENROUTER_API_KEY=test-placeholder-key
+      - LLM_MOCK=true
+      - MASSIVE_API_KEY=
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 2s
+      timeout: 2s
+      retries: 30
+      start_period: 5s
+
+  playwright:
+    build:
+      context: .
+      dockerfile: Dockerfile.playwright
+    depends_on:
+      finally:
+        condition: service_healthy
+    environment:
+      - BASE_URL=http://finally:8000
+    volumes:
+      - ./playwright-report:/app/playwright-report
+      - ./test-results:/app/test-results

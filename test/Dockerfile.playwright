@@ -1,0 +1,13 @@
+# Standalone Playwright container for E2E tests (PLAN.md §12).
+# Keeps browser binaries and test deps out of the production image.
+FROM mcr.microsoft.com/playwright:v1.61.1-jammy
+
+WORKDIR /app
+
+COPY package.json ./
+RUN npm install
+
+COPY playwright.config.ts ./
+COPY tests ./tests
+
+CMD ["npx", "playwright", "test"]
